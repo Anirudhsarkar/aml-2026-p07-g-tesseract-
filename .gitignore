@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Editor files and secrets
+.env
+.vscode/
+.idea/
+
+# Raw data: download manually and keep out of Git
+data/raw/*
+!data/raw/.gitkeep
+*.zip
+*.xlsx
+
+# Reproducible processed data
+data/processed/*
+!data/processed/.gitkeep
+
+# Keep cleaning diagnostics tracked; don't ignore results/*.csv or *.json
