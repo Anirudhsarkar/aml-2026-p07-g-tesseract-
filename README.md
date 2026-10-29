@@ -2,7 +2,7 @@
 
 **Course:** Applied Machine Learning (CSAI2017P), Autumn 2026  
 **Theme:** P07 — Retail Segmentation  
-**Group:** Team Tesseract
+**Group:** Optima Vision
 
 ## Project question
 Which genuinely distinct customer groups exist in online retail transactions, and can a model assign a new customer to a segment using only their early purchase behaviour?
@@ -48,14 +48,10 @@ Review the cleaning funnel and decisions before using the output. The rules are 
 ## Team
 | Member | Enrolment number | GitHub username |
 |---|---:|---|
-| Aryan Kumar Maurya | 590022160 | TODO |
-| Anirudh Sarkar | 590025468 | TODO |
-| Devam Yadav | 590022492 | TODO |
-| Aniket Malik | 590024567 | TODO |
-| Mansha | 590021940 | TODO |
-| Shatakshi | 590021766 | TODO |
-| Saisradha Das | 590029397 | TODO |
-| Pragati | 590028725 | TODO |
+| Ansh Monga | 590025575 | TODO |
+| Raunak Singh Negi | 590022626 | TODO |
+| Prince Sai | 590022756 | TODO |
+| Anirudh Awasthi | 590027460 | TODO |
 
 ## Contributions
 Agree and record actual responsibilities here. Every member should understand the code and decisions they contribute.
