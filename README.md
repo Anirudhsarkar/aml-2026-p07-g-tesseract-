@@ -124,6 +124,30 @@ The two customer-level CSVs are generated locally and are not committed; run the
 
 **Interpretation caveat:** Monetary represents gross retained sales because cancellation invoices were excluded in Phase 1, not netted against original purchases. Customer ID is an identifier and is not included as a clustering feature.
 
+
+## Phase 4A — K-Means baseline
+
+The K-Means baseline evaluates cluster counts from **k=2 through k=10** using the three standardized log-RFM features: Recency, Frequency and Monetary. The run uses `random_state=42`, `n_init=20` and the Lloyd algorithm.
+
+Run from the repository root after Phase 3:
+
+```bash
+python src/clustering.py
+```
+
+### Evaluation design
+
+- **Inertia:** calculated using all 5,861 customers; lower values are expected as k increases.
+- **Silhouette:** calculated on a deterministic sample of 2,000 customers to reduce runtime; the sample size and random state are recorded.
+- **Davies-Bouldin and Calinski-Harabasz:** calculated using all customers.
+- Customer IDs are retained only to map cluster assignments back to customers; they are not model features.
+
+### Baseline result
+
+The highest sampled silhouette among tested values was at **k=2 (0.4444)**. For k=2, the Davies-Bouldin index was **0.8730** and the Calinski-Harabasz score was **6177.7656**. This makes k=2 a provisional candidate, not a final decision. We must also inspect cluster sizes, customer RFM profiles, the elbow curve and business usefulness before selecting a final segmentation.
+
+See [K-Means metrics](results/kmeans_metrics.csv) and [K-Means summary](results/kmeans_summary.json). The script also generates customer assignments, cluster profiles and elbow/silhouette/PCA plots locally under `results/` and `results/figures/`.
+
 ## Planned analysis
 1. **RFM completed:** customer-level Recency, Frequency and Monetary values; fixed reference date, skewness inspection and log-standardized features documented above.
 2. **Clustering:** K-Means for k=2–10 (elbow/inertia and silhouette), hierarchical agglomerative clustering (dendrogram and at least two linkages), and DBSCAN (k-distance plot/noise analysis).
