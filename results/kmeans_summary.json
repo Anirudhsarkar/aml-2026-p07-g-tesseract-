@@ -1,0 +1,25 @@
+{
+  "customer_count": 5861,
+  "features": ["Recency", "Frequency", "Monetary"],
+  "k_values_tested": [2,3,4,5,6,7,8,9,10],
+  "random_state": 42,
+  "n_init": 20,
+  "silhouette_method": "Deterministic sample of 2000 customers; Davies-Bouldin and Calinski-Harabasz use all rows.",
+  "provisional_k_by_sampled_silhouette": 2,
+  "candidate_metrics_for_k2": {
+    "inertia": 8558.6797,
+    "silhouette_sampled": 0.4444,
+    "davies_bouldin": 0.8730,
+    "calinski_harabasz": 6177.7656
+  },
+  "selection_warning": "Do not select final k by silhouette alone; inspect elbow, cluster sizes, profiles and stability.",
+  "generated_outputs": [
+    "results/kmeans_metrics.csv",
+    "results/kmeans_cluster_assignments.csv",
+    "results/kmeans_cluster_profiles.csv",
+    "results/kmeans_summary.json",
+    "results/figures/kmeans_elbow_curve.png",
+    "results/figures/kmeans_silhouette_scores.png",
+    "results/figures/kmeans_pca_provisional.png"
+  ]
+}
