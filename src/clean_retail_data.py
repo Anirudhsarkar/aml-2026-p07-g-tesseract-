@@ -111,6 +111,10 @@ def clean_transactions(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dic
         "Exclude known service/adjustment codes; review unique codes during EDA.",
     )
     data = keep_rows(
+        data, funnel, "missing_descriptions", data["Description"].notna(),
+        "Remove rows without a product description.",
+    )
+    data = keep_rows(
         data, funnel, "non_positive_quantity", data["Quantity"] > 0,
         "Keep positive quantities; cancellation invoices were already excluded.",
     )
