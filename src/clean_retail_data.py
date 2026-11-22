@@ -105,15 +105,6 @@ def clean_transactions(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dic
         data, funnel, "cancellation_invoices", ~cancellation,
         "Baseline excludes cancellation invoices rather than netting them to original invoices.",
     )
-    valid_core = (
-        data["InvoiceDate"].notna() & data["Invoice"].notna()
-        & data["StockCode"].notna() & data["Quantity"].notna()
-        & data["Price"].notna()
-    )
-    data = keep_rows(
-        data, funnel, "invalid_core_fields", valid_core,
-        "Remove rows with missing/invalid invoice, stock code, date, quantity or price.",
-    )
     data = keep_rows(
         data, funnel, "non_product_stock_codes",
         ~data["StockCode"].str.upper().isin(NON_PRODUCT_CODES),
