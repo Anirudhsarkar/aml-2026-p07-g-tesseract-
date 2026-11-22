@@ -1,0 +1,90 @@
+{
+  "dataset": "UCI Online Retail II",
+  "cleaned_rows": 776672,
+  "unique_customers": 5861,
+  "unique_invoices": 36669,
+  "unique_products_stock_codes": 4626,
+  "countries": 41,
+  "date_min": "2009-12-01T07:45:00",
+  "date_max": "2011-12-09T12:50:00",
+  "revenue_currency": "GBP",
+  "total_gross_revenue_gbp": 17073528.308,
+  "monthly_revenue_peak": {
+    "Month": "2010-11",
+    "revenue_gbp": 1156008.392,
+    "transactions": 2572,
+    "units_sold": 652252
+  },
+  "monthly_revenue_low": {
+    "Month": "2011-02",
+    "revenue_gbp": 442293.59,
+    "transactions": 992,
+    "units_sold": 264785
+  },
+  "top_product_by_revenue": {
+    "StockCode": "22423",
+    "Description": "REGENCY CAKESTAND 3 TIER",
+    "units_sold": 24124,
+    "revenue_gbp": 277656.25,
+    "transactions": 3317
+  },
+  "top_country_by_revenue": {
+    "Country": "United Kingdom",
+    "transactions": 33413,
+    "customers": 5336,
+    "revenue_gbp": 14291644.567,
+    "units_sold": 8522795
+  },
+  "cleaned_data_missing_values": {
+    "Invoice": 0,
+    "StockCode": 0,
+    "Description": 0,
+    "Quantity": 0,
+    "InvoiceDate": 0,
+    "Price": 0,
+    "Customer ID": 0,
+    "Country": 0,
+    "Revenue": 0,
+    "Month": 0
+  },
+  "outlier_method": "Tukey upper fence: Q3 + 1.5 * IQR; flags are diagnostic only, not deleted",
+  "outlier_summary": [
+    {
+      "feature": "Quantity",
+      "q1": 2.0,
+      "q3": 12.0,
+      "iqr": 10.0,
+      "upper_iqr_fence": 27.0,
+      "values_above_upper_fence": 51077,
+      "percent_above_upper_fence": 6.576392608462775,
+      "maximum": 80995.0
+    },
+    {
+      "feature": "Price",
+      "q1": 1.25,
+      "q3": 3.75,
+      "iqr": 2.5,
+      "upper_iqr_fence": 7.5,
+      "values_above_upper_fence": 63195,
+      "percent_above_upper_fence": 8.136639405051296,
+      "maximum": 649.5
+    },
+    {
+      "feature": "Revenue",
+      "q1": 4.95,
+      "q3": 19.799999999999997,
+      "iqr": 14.849999999999998,
+      "upper_iqr_fence": 42.074999999999996,
+      "values_above_upper_fence": 62224,
+      "percent_above_upper_fence": 8.01161880433439,
+      "maximum": 168469.6
+    }
+  ],
+  "interpretation_notes": [
+    "Revenue is Quantity multiplied by unit Price and is reported in GBP.",
+    "The analysis uses the Phase 1 cleaned transaction file; excluded cancellations are not netted against original purchases.",
+    "The PAPER CRAFT, LITTLE BIRDIE product has an unusually large one-invoice quantity/revenue; investigate before treating it as representative demand.",
+    "The United Kingdom dominates recorded revenue; interpret country totals in light of dataset transaction coverage.",
+    "IQR fences flag potential outliers but do not prove data errors; observations are retained pending domain review."
+  ]
+}
