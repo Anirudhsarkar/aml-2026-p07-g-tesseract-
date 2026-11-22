@@ -1,115 +1,174 @@
-"""
-Phase 1: Load and clean the UCI Online Retail II workbook.
+"""Transparent first-pass cleaning for UCI Online Retail II.
 
-Expected input:
-    data/raw/online_retail_II.xlsx
-
-Run from the repository root:
+Usage:
     python src/clean_retail_data.py
+    python src/clean_retail_data.py --input data/raw/online_retail_II.xlsx
+
+Review the rules with the team before treating this baseline as final.
 """
-from pathlib import Path
+from __future__ import annotations
+
+import argparse
 import json
+from pathlib import Path
+
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-INPUT_FILE = ROOT / "data" / "raw" / "online_retail_II.xlsx"
+DEFAULT_INPUT = ROOT / "data" / "raw" / "online_retail_II.xlsx"
 PROCESSED_DIR = ROOT / "data" / "processed"
 RESULTS_DIR = ROOT / "results"
 
-# Explicit non-merchandise / service / adjustment codes used in this Phase 1 run.
+REQUIRED_COLUMNS = [
+    "Invoice", "StockCode", "Description", "Quantity",
+    "InvoiceDate", "Price", "Customer ID", "Country",
+]
+# Explicit service, adjustment and non-merchandise codes excluded in Phase 1.
 NON_PRODUCT_CODES = {
-    "B", "C2", "C3", "CRUK", "D", "DOT", "GIFT", "M", "m", "POST", "S"
+    "POST", "M", "DOT", "BANK CHARGES", "AMAZONFEE", "ADJUST",
+    "CRUK", "D", "C2", "S", "PADS", "B", "TEST001",
 }
 
 
-def main():
-    if not INPUT_FILE.exists():
+def read_workbook(path: Path) -> pd.DataFrame:
+    """Read both source sheets and validate the expected schema."""
+    if not path.exists():
         raise FileNotFoundError(
-            f"Dataset not found: {INPUT_FILE}\n"
-            "Download the UCI Online Retail II workbook and place it at "
-            "data/raw/online_retail_II.xlsx"
+            f"Workbook not found: {path}\n"
+            "Download UCI Online Retail II in a browser, extract the ZIP, "
+            "and place online_retail_II.xlsx in data/raw/."
         )
+    book = pd.ExcelFile(path, engine="openpyxl")
+    if len(book.sheet_names) < 2:
+        raise ValueError(f"Expected two workbook sheets; found {book.sheet_names}")
+    frames = []
+    for sheet in book.sheet_names[:2]:
+        frame = pd.read_excel(book, sheet_name=sheet, engine="openpyxl")
+        frame.columns = [str(column).strip() for column in frame.columns]
+        frames.append(frame)
+    data = pd.concat(frames, ignore_index=True)
+    missing = [column for column in REQUIRED_COLUMNS if column not in data.columns]
+    if missing:
+        raise ValueError(f"Missing required columns {missing}; found {list(data.columns)}")
+    return data
 
-    sheets = pd.read_excel(INPUT_FILE, sheet_name=None, engine="openpyxl")
-    frames = list(sheets.values())
-    raw = pd.concat(frames, ignore_index=True)
-    funnel = [{"stage": "Loaded from both sheets", "rows_remaining": int(len(raw))}]
 
-    data = raw.drop_duplicates().copy()
-    funnel.append({"stage": "After exact duplicate removal", "rows_remaining": int(len(data))})
+def record_step(funnel: list[dict], name: str, before: int, after: int, decision: str) -> None:
+    funnel.append({
+        "rule": name,
+        "rows_before": int(before),
+        "rows_after": int(after),
+        "rows_removed": int(before - after),
+        "decision": decision,
+    })
 
-    data = data[data["Customer ID"].notna()].copy()
-    funnel.append({"stage": "After removing missing Customer ID", "rows_remaining": int(len(data))})
 
-    data = data[~data["Invoice"].astype(str).str.startswith("C")].copy()
-    funnel.append({"stage": "After removing cancellation invoices", "rows_remaining": int(len(data))})
+def keep_rows(
+    data: pd.DataFrame, funnel: list[dict], name: str,
+    mask: pd.Series, decision: str,
+) -> pd.DataFrame:
+    before = len(data)
+    result = data.loc[mask].copy()
+    record_step(funnel, name, before, len(result), decision)
+    return result
 
-    data = data[~data["StockCode"].astype(str).isin(NON_PRODUCT_CODES)].copy()
-    funnel.append({"stage": "After removing non-product/service stock codes", "rows_remaining": int(len(data))})
 
-    data = data[data["Description"].notna()].copy()
-    funnel.append({"stage": "After removing missing descriptions", "rows_remaining": int(len(data))})
+def clean_transactions(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dict]:
+    data = raw.copy()
+    funnel: list[dict] = []
+    diagnostics = {
+        "raw_rows": int(len(data)),
+        "raw_missing_customer_id_rows": int(data["Customer ID"].isna().sum()),
+        "raw_missing_customer_id_percent": float(data["Customer ID"].isna().mean() * 100),
+        "raw_duplicate_rows": int(data.duplicated().sum()),
+        "raw_cancellation_rows": int(
+            data["Invoice"].astype("string").str.startswith("C", na=False).sum()
+        ),
+    }
 
-    data = data[data["Quantity"] > 0].copy()
-    funnel.append({"stage": "After removing non-positive quantities", "rows_remaining": int(len(data))})
+    for column in ["Invoice", "StockCode", "Description", "Country"]:
+        data[column] = data[column].astype("string").str.strip()
+    data["Customer ID"] = pd.to_numeric(data["Customer ID"], errors="coerce")
+    data["Quantity"] = pd.to_numeric(data["Quantity"], errors="coerce")
+    data["Price"] = pd.to_numeric(data["Price"], errors="coerce")
+    data["InvoiceDate"] = pd.to_datetime(data["InvoiceDate"], errors="coerce")
 
-    data = data[data["Price"] > 0].copy()
-    funnel.append({"stage": "After removing non-positive prices", "rows_remaining": int(len(data))})
+    data = keep_rows(
+        data, funnel, "exact_duplicates", ~data.duplicated(keep="first"),
+        "Keep the first copy of exact duplicate rows.",
+    )
+    data = keep_rows(
+        data, funnel, "missing_customer_id", data["Customer ID"].notna(),
+        "Remove rows without Customer ID for customer-level segmentation; report lost share.",
+    )
+    cancellation = data["Invoice"].str.startswith("C", na=False)
+    data = keep_rows(
+        data, funnel, "cancellation_invoices", ~cancellation,
+        "Baseline excludes cancellation invoices rather than netting them to original invoices.",
+    )
+    valid_core = (
+        data["InvoiceDate"].notna() & data["Invoice"].notna()
+        & data["StockCode"].notna() & data["Quantity"].notna()
+        & data["Price"].notna()
+    )
+    data = keep_rows(
+        data, funnel, "invalid_core_fields", valid_core,
+        "Remove rows with missing/invalid invoice, stock code, date, quantity or price.",
+    )
+    data = keep_rows(
+        data, funnel, "non_product_stock_codes",
+        ~data["StockCode"].str.upper().isin(NON_PRODUCT_CODES),
+        "Exclude known service/adjustment codes; review unique codes during EDA.",
+    )
+    data = keep_rows(
+        data, funnel, "non_positive_quantity", data["Quantity"] > 0,
+        "Keep positive quantities; cancellation invoices were already excluded.",
+    )
+    data = keep_rows(
+        data, funnel, "non_positive_price", data["Price"] > 0,
+        "Keep positive unit prices.",
+    )
 
-    # Customer IDs are identifiers, not continuous measurements.
-    data["Customer ID"] = data["Customer ID"].astype("Int64")
+    diagnostics.update({
+        "clean_rows": int(len(data)),
+        "clean_customers": int(data["Customer ID"].nunique()),
+        "clean_min_invoice_date": data["InvoiceDate"].min().isoformat() if len(data) else None,
+        "clean_max_invoice_date": data["InvoiceDate"].max().isoformat() if len(data) else None,
+        "clean_total_revenue_gbp": float((data["Quantity"] * data["Price"]).sum()),
+        "clean_unique_stock_codes": int(data["StockCode"].nunique()),
+        "limitations": [
+            "Rules are a baseline and must be reviewed against the actual data.",
+            "Cancellation invoices are excluded rather than netted against original invoices.",
+            "The non-product code list may need expansion after reviewing unique StockCode values.",
+            "Extreme positive quantities are not automatically removed or capped; inspect outliers.",
+            "Customer ID is an identifier, not a continuous model feature.",
+        ],
+    })
+    return data, funnel, diagnostics
 
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
+    args = parser.parse_args()
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    data.to_csv(PROCESSED_DIR / "transactions_clean.csv", index=False)
 
-    funnel_df = pd.DataFrame(funnel)
-    funnel_df["rows_removed"] = funnel_df["rows_remaining"].shift(1) - funnel_df["rows_remaining"]
-    funnel_df.loc[0, "rows_removed"] = 0
-    funnel_df.to_csv(RESULTS_DIR / "cleaning_funnel.csv", index=False)
+    print(f"Reading workbook: {args.input}")
+    raw = read_workbook(args.input)
+    print(f"Combined raw shape: {raw.shape}")
+    cleaned, funnel, diagnostics = clean_transactions(raw)
 
-    summary = {
-        "dataset": "UCI Online Retail II",
-        "source_file": INPUT_FILE.name,
-        "sheets": {
-            name: {"rows": int(frame.shape[0]), "columns": int(frame.shape[1])}
-            for name, frame in sheets.items()
-        },
-        "combined_rows": int(len(raw)),
-        "combined_columns": [str(column) for column in raw.columns],
-        "missing_values_before_cleaning": {
-            str(k): int(v) for k, v in raw.isna().sum().items()
-        },
-        "exact_duplicate_rows": int(raw.duplicated().sum()),
-        "cancellation_invoice_rows_before_cleaning": int(
-            raw["Invoice"].astype(str).str.startswith("C").sum()
-        ),
-        "cleaning_rules": [
-            "Remove exact duplicate transaction rows.",
-            "Remove rows without Customer ID because customer-level RFM requires customer identity.",
-            "Remove cancellation invoices whose Invoice value starts with C.",
-            "Remove non-product/service stock codes: " + ", ".join(sorted(NON_PRODUCT_CODES)) + ".",
-            "Remove rows with missing Description.",
-            "Remove rows with Quantity <= 0.",
-            "Remove rows with Price <= 0."
-        ],
-        "cleaned_rows": int(len(data)),
-        "cleaned_columns": [str(column) for column in data.columns],
-        "cleaning_retention_percent": round(len(data) / len(raw) * 100, 3),
-        "notes": [
-            "Cleaning funnel stages are sequential; rows_removed at each stage are incremental.",
-            "No upper-tail quantity or price outlier capping/removal was applied. Extreme positive values should be inspected during EDA rather than silently discarded.",
-            "Cancellation invoices are excluded, not netted against original purchases. The team should state this choice in the report and revisit it if a return-adjusted RFM definition is required.",
-            "Non-product/service codes were excluded by an explicit list; alphabetic suffixes on ordinary stock codes were retained because many are valid product identifiers."
-        ]
-    }
-    with open(RESULTS_DIR / "cleaning_summary.json", "w", encoding="utf-8") as file:
-        json.dump(summary, file, indent=2, ensure_ascii=False)
+    cleaned.to_csv(PROCESSED_DIR / "transactions_clean.csv", index=False)
+    pd.DataFrame(funnel).to_csv(RESULTS_DIR / "cleaning_funnel.csv", index=False)
+    with (RESULTS_DIR / "cleaning_summary.json").open("w", encoding="utf-8") as handle:
+        json.dump(diagnostics, handle, indent=2, ensure_ascii=False)
 
-    print(f"Combined rows: {len(raw):,}")
-    print(f"Cleaned rows:  {len(data):,}")
-    print(f"Retention:     {len(data) / len(raw) * 100:.2f}%")
-    print("Saved cleaned data, cleaning funnel, and summary.")
+    print("\nCleaning funnel:")
+    print(pd.DataFrame(funnel).to_string(index=False))
+    print("\nDiagnostics:")
+    print(json.dumps(diagnostics, indent=2, ensure_ascii=False))
+    print("\nWrote cleaned transactions and cleaning diagnostics.")
 
 
 if __name__ == "__main__":
