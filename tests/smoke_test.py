@@ -53,7 +53,13 @@ def main():
         base_rows = json.loads((work / "results/cleaning_summary.json").read_text())["clean_rows"]
         run(["src/clean_retail_data.py", "--drop-reversed-orders"], work)
         new = json.loads((work / "results/cleaning_summary.json").read_text())
-        assert new["reversed_order_lines_removed"] > 0 and new["clean_rows"] < base_rows
+        assert new["reversed_order_lines_detected"] > 0, "synthetic reversed purchase was not detected"
+        assert new["reversed_order_lines_removed"] == new["reversed_order_lines_detected"], (
+            "detected reversed purchase lines were not all removed"
+        )
+        assert new["clean_rows"] == base_rows - new["reversed_order_lines_removed"], (
+            "cleaning row count does not match the reversed-order removal count"
+        )
         cleaned = pd.read_csv(work / "data/processed/transactions_clean.csv")
         assert not (cleaned["Quantity"] == 80995).any(), "reversed 80,995-unit order still present"
     print("\nSMOKE TEST PASSED (synthetic data; no real results were produced).")
