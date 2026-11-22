@@ -131,10 +131,21 @@ def clean_transactions(
     )
     cancellation = data["Invoice"].str.startswith("C", na=False)
     reversed_index = find_reversed_orders(data) if drop_reversed else pd.Index([])
+    diagnostics["reversed_order_lines_detected"] = int(len(reversed_index))
+    diagnostics["reversed_order_lines_removed"] = 0
     data = keep_rows(
         data, funnel, "cancellation_invoices", ~cancellation,
         "Baseline excludes cancellation invoices rather than netting them to original invoices.",
     )
+    if drop_reversed:
+        before = len(data)
+        keep_mask = ~data.index.isin(reversed_index)
+        data = keep_rows(
+            data, funnel, "reversed_purchase_lines", keep_mask,
+            "Sensitivity option: remove earlier purchase lines matched to later cancellation lines "
+            "for the same customer, stock code and quantity.",
+        )
+        diagnostics["reversed_order_lines_removed"] = int(before - len(data))
     valid_core = (
         data["InvoiceDate"].notna() & data["Invoice"].notna()
         & data["StockCode"].notna() & data["Quantity"].notna()
