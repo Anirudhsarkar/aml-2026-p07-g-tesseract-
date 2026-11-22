@@ -21,3 +21,10 @@ data/processed/*
 !data/processed/.gitkeep
 
 # Keep cleaning diagnostics tracked; don't ignore results/*.csv or *.json
+
+# Customer-level outputs generated locally (small summaries stay tracked)
+results/customer_rfm.csv
+results/rfm_scaled.csv
+results/customer_segments.csv
+results/customer_purchasing_patterns.csv
+results/kmeans_cluster_assignments.csv

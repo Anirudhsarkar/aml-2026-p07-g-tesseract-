@@ -1,0 +1,35 @@
+{
+  "window_days": 30,
+  "horizon_days": 90,
+  "eligible_customers": 5167,
+  "customers_excluded_incomplete_window_or_horizon": 694,
+  "features": [
+    "early_invoices",
+    "early_lines",
+    "early_units",
+    "early_spend",
+    "early_avg_invoice_value",
+    "early_max_invoice_value",
+    "first_invoice_value",
+    "first_invoice_lines",
+    "early_distinct_products",
+    "early_active_days",
+    "early_units_per_line",
+    "early_avg_unit_price",
+    "early_days_span",
+    "is_uk",
+    "first_weekday",
+    "first_hour"
+  ],
+  "excluded_by_design": [
+    "Recency",
+    "Frequency",
+    "Monetary (lifetime)",
+    "acquisition month/year",
+    "any transaction on/after the window end"
+  ],
+  "check_all_feature_rows_before_window_end": true,
+  "check_no_lifetime_rfm_in_features": true,
+  "preprocessing": "log1p + StandardScaler inside Pipelines fitted on the training split only",
+  "reference_date": "2011-12-10"
+}

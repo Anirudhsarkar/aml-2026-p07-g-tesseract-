@@ -1,0 +1,5 @@
+label,customers,future_recency_median,future_frequency_median,future_monetary_median,share_with_no_future_purchase
+Future-0 (value rank 1 of 4),413,4.0,3.0,1019.2,0.0
+Future-1 (value rank 2 of 4),878,20.0,2.0,641.815,0.0
+Future-2 (value rank 3 of 4),1055,56.0,1.0,301.8,0.0
+Future-3 (value rank 4 of 4),2821,90.0,0.0,0.0,1.0

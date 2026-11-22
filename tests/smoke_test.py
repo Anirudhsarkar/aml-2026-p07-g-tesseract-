@@ -1,0 +1,63 @@
+"""End-to-end smoke test on SYNTHETIC data, in a temporary copy of the repo.
+
+    python tests/smoke_test.py
+
+Checks that every pipeline step runs and produces its outputs, that the
+leakage audit passes, and that --drop-reversed-orders removes the reversed
+80,995-unit order. It never touches your results/ folder.
+"""
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import pandas as pd
+
+REPO = Path(__file__).resolve().parents[1]
+EXPECTED = [
+    "cleaning_funnel.csv", "cleaning_summary.json", "eda_summary.json", "monthly_revenue.csv",
+    "customer_purchasing_patterns.csv", "rfm_summary.json", "customer_rfm.csv", "kmeans_metrics.csv",
+    "hierarchical_metrics.csv", "dbscan_grid.csv", "kmeans_stability.csv", "clustering_comparison.json",
+    "k_selection.csv", "segment_profiles.csv", "customer_segments.csv", "metrics.csv",
+    "classification_leakage_audit.json", "figures/segments_pca.png", "figures/dendrogram_ward.png",
+    "figures/dbscan_kdistance.png",
+]
+
+
+def run(cmd, cwd):
+    subprocess.run([sys.executable, *cmd], cwd=cwd, check=True)
+
+
+def main():
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp) / "repo"
+        shutil.copytree(REPO, work, ignore=shutil.ignore_patterns(".git", "data", "results", "__pycache__"))
+        for folder in ["data/raw", "data/processed", "results/figures"]:
+            (work / folder).mkdir(parents=True, exist_ok=True)
+        run(["tests/make_synthetic_workbook.py", "data/raw/online_retail_II.xlsx"], work)
+        run(["src/run_all.py"], work)
+        missing = [name for name in EXPECTED if not (work / "results" / name).exists()]
+        assert not missing, f"missing outputs: {missing}"
+        assert (work / "report" / "report.md").exists(), "report draft missing"
+        audit = json.loads((work / "results/classification_leakage_audit.json").read_text())
+        assert audit["check_all_feature_rows_before_window_end"] and audit["check_no_lifetime_rfm_in_features"]
+        metrics = pd.read_csv(work / "results/metrics.csv")
+        assert {"model", "task", "split", "metric", "value", "notes"} == set(metrics.columns)
+        assert metrics.value.between(0, 1).all(), "metric out of [0, 1]"
+        baseline = metrics[(metrics.model == "Majority baseline") & (metrics.metric == "macro_f1")].value.max()
+        best = metrics[(metrics.split == "test") & (metrics.metric == "macro_f1")].value.max()
+        assert best > baseline, "no model beats the majority baseline"
+
+        base_rows = json.loads((work / "results/cleaning_summary.json").read_text())["clean_rows"]
+        run(["src/clean_retail_data.py", "--drop-reversed-orders"], work)
+        new = json.loads((work / "results/cleaning_summary.json").read_text())
+        assert new["reversed_order_lines_removed"] > 0 and new["clean_rows"] < base_rows
+        cleaned = pd.read_csv(work / "data/processed/transactions_clean.csv")
+        assert not (cleaned["Quantity"] == 80995).any(), "reversed 80,995-unit order still present"
+    print("\nSMOKE TEST PASSED (synthetic data; no real results were produced).")
+
+
+if __name__ == "__main__":
+    main()

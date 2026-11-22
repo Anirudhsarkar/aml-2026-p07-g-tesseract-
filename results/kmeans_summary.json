@@ -1,0 +1,29 @@
+{
+  "customer_count": 5861,
+  "features": [
+    "Recency",
+    "Frequency",
+    "Monetary"
+  ],
+  "k_values_tested": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "random_state": 42,
+  "n_init": 20,
+  "silhouette_method": "Deterministic sample of 2000; DBI and CH use all rows.",
+  "provisional_k_by_sampled_silhouette": 2,
+  "provisional_k_by_full_silhouette": 2,
+  "pca_explained_variance_ratio": [
+    0.7635128498286444,
+    0.18779884111433714
+  ],
+  "selection_warning": "Do not select final k by silhouette alone; inspect elbow, cluster sizes, profiles and stability."
+}

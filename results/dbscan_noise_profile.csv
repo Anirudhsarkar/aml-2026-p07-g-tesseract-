@@ -1,0 +1,3 @@
+group,eps,min_samples,customers,recency_mean,recency_median,frequency_mean,frequency_median,monetary_mean,monetary_median
+clustered,0.4,20,5614,204.49519059494122,103.0,5.105985037406484,3.0,1771.252262736017,824.47
+noise,0.4,20,247,117.21457489878543,17.0,32.40485829959514,16.0,28865.255485829963,12225.16

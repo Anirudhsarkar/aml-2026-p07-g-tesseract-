@@ -1,0 +1,8 @@
+rule,rows_before,rows_after,rows_removed,decision
+exact_duplicates,1067371,1033036,34335,Keep the first copy of exact duplicate rows.
+missing_customer_id,1033036,797885,235151,Remove rows without Customer ID for customer-level segmentation; report lost share.
+cancellation_invoices,797885,779495,18390,Baseline excludes cancellation invoices rather than netting them to original invoices.
+non_product_stock_codes,779495,776735,2760,Exclude known service/adjustment codes; review unique codes during EDA.
+missing_descriptions,776735,776735,0,Remove rows without a product description.
+non_positive_quantity,776735,776735,0,Keep positive quantities; cancellation invoices were already excluded.
+non_positive_price,776735,776672,63,Keep positive unit prices.

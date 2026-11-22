@@ -1,0 +1,83 @@
+{
+  "customer_count": 5861,
+  "random_state": 42,
+  "hierarchical": {
+    "linkages": [
+      "ward",
+      "complete",
+      "average"
+    ],
+    "cophenetic_correlation": {
+      "ward": 0.536186808338861,
+      "complete": 0.5946521750927525,
+      "average": 0.7172736428076106
+    },
+    "best_k_by_silhouette_in_3_to_6": {
+      "ward": 3,
+      "complete": 3,
+      "average": 3
+    }
+  },
+  "dbscan": {
+    "grid_eps": [
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8
+    ],
+    "grid_min_samples": [
+      5,
+      10,
+      20
+    ],
+    "constraints": {
+      "max_noise_percent": 15.0,
+      "min_cluster_share": 0.01,
+      "min_clusters": 2
+    },
+    "chosen": {
+      "eps": 0.4,
+      "min_samples": 20,
+      "clusters": 2.0,
+      "noise_percent": 4.214297901382016,
+      "largest_cluster_share": 0.6884490701245521,
+      "smallest_cluster_share": 0.2694079508616277,
+      "silhouette_non_noise": 0.286521720179872
+    },
+    "finding": "Best DBSCAN configuration under the stated constraints.",
+    "reference_configuration_for_noise_analysis": {
+      "eps": 0.4,
+      "min_samples": 20,
+      "noise_percent": 4.214297901382016,
+      "clusters": 2
+    }
+  },
+  "kmeans_stability_ari_mean": {
+    "2": 0.9873440333488741,
+    "3": 0.9520951264913586,
+    "4": 0.971803752394309,
+    "5": 0.9202123684482085,
+    "6": 0.895307968729661,
+    "7": 0.8052371543466259,
+    "8": 0.8291819178290017,
+    "9": 0.8619058338605828,
+    "10": 0.9010210964207982
+  },
+  "notes": [
+    "Silhouette is computed on all customers for K-Means and hierarchical clusterings.",
+    "DBSCAN silhouette excludes noise points and is therefore not directly comparable.",
+    "Do not select the final k by silhouette alone; see src/segments.py for the documented selection rule."
+  ],
+  "kmeans_k_by_full_silhouette": 2
+}

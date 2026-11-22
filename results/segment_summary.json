@@ -1,0 +1,52 @@
+{
+  "final_k": 4,
+  "selection_rule": "highest silhouette among k in 3..6 with smallest segment >= 5% of customers and stability ARI >= 0.75",
+  "k_range_considered": [
+    3,
+    6
+  ],
+  "constraints": {
+    "min_cluster_share": 0.05,
+    "min_stability_ari": 0.75
+  },
+  "random_state": 42,
+  "pca_explained_variance_ratio": [
+    0.7635128498286444,
+    0.18779884111433714
+  ],
+  "segments": [
+    {
+      "Segment": 0,
+      "SegmentName": "Champions",
+      "customers": 1188,
+      "customer_share": 0.20269578570209862,
+      "revenue_share": 0.7390742633488011
+    },
+    {
+      "Segment": 1,
+      "SegmentName": "At-Risk High-Value",
+      "customers": 1457,
+      "customer_share": 0.24859239037706876,
+      "revenue_share": 0.16330556916542877
+    },
+    {
+      "Segment": 2,
+      "SegmentName": "Recent Customers",
+      "customers": 1249,
+      "customer_share": 0.2131035659443781,
+      "revenue_share": 0.0614046296165253
+    },
+    {
+      "Segment": 3,
+      "SegmentName": "Lost / Dormant",
+      "customers": 1967,
+      "customer_share": 0.33560825797645455,
+      "revenue_share": 0.03621553786924497
+    }
+  ],
+  "caveats": [
+    "Segment names are heuristic labels from centroid thresholds; review them against the profiles.",
+    "Monetary is gross sales (cancellations excluded, not netted), so very high values can include reversed orders.",
+    "PCA is a 2D projection of a 3-feature space; overlap in the plot does not imply poor clustering in 3D."
+  ]
+}

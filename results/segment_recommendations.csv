@@ -1,0 +1,5 @@
+Segment,SegmentName,description,recommended_actions
+0,Champions,"Most recent, most frequent, highest spend.",VIP/early-access programme; loyalty rewards; referral incentives; avoid blanket discounts.
+1,At-Risk High-Value,"Previously frequent, high spend, but have gone quiet.","Priority win-back: personal outreach, offers on previously bought categories, feedback survey."
+2,Recent Customers,Bought recently but with few orders so far.,"Onboarding emails, second-purchase incentive, product recommendations to build the habit."
+3,Lost / Dormant,Long inactive with low order count.,Low-cost reactivation email series; suppress from paid campaigns if no response.

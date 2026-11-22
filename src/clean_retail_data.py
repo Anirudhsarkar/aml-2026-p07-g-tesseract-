@@ -23,9 +23,9 @@ REQUIRED_COLUMNS = [
     "Invoice", "StockCode", "Description", "Quantity",
     "InvoiceDate", "Price", "Customer ID", "Country",
 ]
+# Explicit service, adjustment and non-merchandise codes excluded in Phase 1.
 NON_PRODUCT_CODES = {
-    "POST", "M", "DOT", "BANK CHARGES", "AMAZONFEE", "ADJUST",
-    "CRUK", "D", "C2", "S", "PADS", "B", "TEST001",
+    "B", "C2", "C3", "CRUK", "D", "DOT", "GIFT", "M", "POST", "S",  # matched case-insensitively
 }
 
 
@@ -72,14 +72,41 @@ def keep_rows(
     return result
 
 
-def clean_transactions(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dict]:
+def find_reversed_orders(data: pd.DataFrame) -> pd.Index:
+    """Index labels of purchase lines later reversed by a cancellation line.
+
+    A cancellation line (Invoice starts with C, Quantity < 0) is matched to the
+    latest earlier purchase line with the same Customer ID, StockCode and
+    quantity. Used only when --drop-reversed-orders is set.
+    """
+    is_cancel = data["Invoice"].str.startswith("C", na=False)
+    cols = ["Customer ID", "StockCode", "Quantity", "InvoiceDate"]
+    purchases = data.loc[~is_cancel & (data["Quantity"] > 0), cols].copy()
+    cancels = data.loc[is_cancel & (data["Quantity"] < 0), cols].copy()
+    if purchases.empty or cancels.empty:
+        return pd.Index([])
+    cancels["Quantity"] = -cancels["Quantity"]
+    for frame in (purchases, cancels):
+        frame["StockCode"] = frame["StockCode"].astype(object)
+    purchases["purchase_index"] = purchases.index
+    purchases = purchases.sort_values("InvoiceDate")
+    cancels = cancels.sort_values("InvoiceDate")
+    matched = pd.merge_asof(
+        cancels, purchases, on="InvoiceDate",
+        by=["Customer ID", "StockCode", "Quantity"], direction="backward",
+    )
+    return pd.Index(matched["purchase_index"].dropna().astype(int).unique())
+
+
+def clean_transactions(
+    raw: pd.DataFrame, drop_reversed: bool = False
+) -> tuple[pd.DataFrame, list[dict], dict]:
     data = raw.copy()
     funnel: list[dict] = []
     diagnostics = {
         "raw_rows": int(len(data)),
         "raw_missing_customer_id_rows": int(data["Customer ID"].isna().sum()),
         "raw_missing_customer_id_percent": float(data["Customer ID"].isna().mean() * 100),
-        "raw_duplicate_rows": int(data.duplicated().sum()),
         "raw_cancellation_rows": int(
             data["Invoice"].astype("string").str.startswith("C", na=False).sum()
         ),
@@ -92,6 +119,7 @@ def clean_transactions(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dic
     data["Price"] = pd.to_numeric(data["Price"], errors="coerce")
     data["InvoiceDate"] = pd.to_datetime(data["InvoiceDate"], errors="coerce")
 
+    diagnostics["raw_duplicate_rows"] = int(data.duplicated().sum())  # after type coercion, as removed below
     data = keep_rows(
         data, funnel, "exact_duplicates", ~data.duplicated(keep="first"),
         "Keep the first copy of exact duplicate rows.",
@@ -101,23 +129,26 @@ def clean_transactions(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dic
         "Remove rows without Customer ID for customer-level segmentation; report lost share.",
     )
     cancellation = data["Invoice"].str.startswith("C", na=False)
+    reversed_index = find_reversed_orders(data) if drop_reversed else pd.Index([])
     data = keep_rows(
         data, funnel, "cancellation_invoices", ~cancellation,
         "Baseline excludes cancellation invoices rather than netting them to original invoices.",
     )
-    valid_core = (
-        data["InvoiceDate"].notna() & data["Invoice"].notna()
-        & data["StockCode"].notna() & data["Quantity"].notna()
-        & data["Price"].notna()
-    )
-    data = keep_rows(
-        data, funnel, "invalid_core_fields", valid_core,
-        "Remove rows with missing/invalid invoice, stock code, date, quantity or price.",
-    )
+    if drop_reversed:
+        data = keep_rows(
+            data, funnel, "reversed_orders", ~data.index.isin(reversed_index),
+            "Optional: drop purchase lines that a later cancellation line reverses "
+            "(same customer, stock code and quantity).",
+        )
+        diagnostics["reversed_order_lines_removed"] = int(funnel[-1]["rows_removed"])
     data = keep_rows(
         data, funnel, "non_product_stock_codes",
         ~data["StockCode"].str.upper().isin(NON_PRODUCT_CODES),
         "Exclude known service/adjustment codes; review unique codes during EDA.",
+    )
+    data = keep_rows(
+        data, funnel, "missing_descriptions", data["Description"].notna(),
+        "Remove rows without a product description.",
     )
     data = keep_rows(
         data, funnel, "non_positive_quantity", data["Quantity"] > 0,
@@ -149,6 +180,11 @@ def clean_transactions(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dic
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
+    parser.add_argument(
+        "--drop-reversed-orders", action="store_true",
+        help="Sensitivity option: also drop purchase lines later reversed by a "
+             "cancellation (off by default so the documented baseline is unchanged).",
+    )
     args = parser.parse_args()
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -156,7 +192,7 @@ def main() -> None:
     print(f"Reading workbook: {args.input}")
     raw = read_workbook(args.input)
     print(f"Combined raw shape: {raw.shape}")
-    cleaned, funnel, diagnostics = clean_transactions(raw)
+    cleaned, funnel, diagnostics = clean_transactions(raw, args.drop_reversed_orders)
 
     cleaned.to_csv(PROCESSED_DIR / "transactions_clean.csv", index=False)
     pd.DataFrame(funnel).to_csv(RESULTS_DIR / "cleaning_funnel.csv", index=False)

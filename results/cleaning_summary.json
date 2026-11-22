@@ -1,0 +1,20 @@
+{
+  "raw_rows": 1067371,
+  "raw_missing_customer_id_rows": 243007,
+  "raw_missing_customer_id_percent": 22.766872999172733,
+  "raw_cancellation_rows": 19494,
+  "raw_duplicate_rows": 34335,
+  "clean_rows": 776672,
+  "clean_customers": 5861,
+  "clean_min_invoice_date": "2009-12-01T07:45:00",
+  "clean_max_invoice_date": "2011-12-09T12:50:00",
+  "clean_total_revenue_gbp": 17073528.308,
+  "clean_unique_stock_codes": 4626,
+  "limitations": [
+    "Rules are a baseline and must be reviewed against the actual data.",
+    "Cancellation invoices are excluded rather than netted against original invoices.",
+    "The non-product code list may need expansion after reviewing unique StockCode values.",
+    "Extreme positive quantities are not automatically removed or capped; inspect outliers.",
+    "Customer ID is an identifier, not a continuous model feature."
+  ]
+}

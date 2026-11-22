@@ -1,0 +1,40 @@
+{
+  "customer_count": 5861,
+  "reference_date": "2011-12-10T12:50:00",
+  "features": [
+    "Recency",
+    "Frequency",
+    "Monetary"
+  ],
+  "definitions": {
+    "Recency": "Days from the fixed reference date to the customer's last purchase.",
+    "Frequency": "Number of distinct invoices.",
+    "Monetary": "Gross retained revenue in GBP."
+  },
+  "raw_feature_statistics": {
+    "Recency": {
+      "mean": 200.81692543934483,
+      "median": 95.0,
+      "max": 739.0,
+      "skewness": 0.8921174226971335
+    },
+    "Frequency": {
+      "mean": 6.256440880395837,
+      "median": 3.0,
+      "max": 377.0,
+      "skewness": 12.121414426317656
+    },
+    "Monetary": {
+      "mean": 2913.0742719672407,
+      "median": 854.99,
+      "max": 580987.04,
+      "skewness": 25.342262754572555
+    }
+  },
+  "log_feature_skewness": {
+    "Recency": -0.48696411434750686,
+    "Frequency": 1.0025839671951362,
+    "Monetary": 0.26589637791216897
+  },
+  "scaling": "StandardScaler fitted to log1p(RFM) features."
+}

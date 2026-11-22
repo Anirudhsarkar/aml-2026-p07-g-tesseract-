@@ -1,0 +1,94 @@
+{
+  "audit": {
+    "window_days": 30,
+    "horizon_days": 90,
+    "eligible_customers": 5167,
+    "customers_excluded_incomplete_window_or_horizon": 694,
+    "features": [
+      "early_invoices",
+      "early_lines",
+      "early_units",
+      "early_spend",
+      "early_avg_invoice_value",
+      "early_max_invoice_value",
+      "first_invoice_value",
+      "first_invoice_lines",
+      "early_distinct_products",
+      "early_active_days",
+      "early_units_per_line",
+      "early_avg_unit_price",
+      "early_days_span",
+      "is_uk",
+      "first_weekday",
+      "first_hour"
+    ],
+    "excluded_by_design": [
+      "Recency",
+      "Frequency",
+      "Monetary (lifetime)",
+      "acquisition month/year",
+      "any transaction on/after the window end"
+    ],
+    "check_all_feature_rows_before_window_end": true,
+    "check_no_lifetime_rfm_in_features": true,
+    "preprocessing": "log1p + StandardScaler inside Pipelines fitted on the training split only",
+    "reference_date": "2011-12-10"
+  },
+  "tasks": {
+    "segment_lifetime": {
+      "customers": 5167,
+      "train_size": 3875,
+      "test_size": 1292,
+      "class_counts": {
+        "Lost / Dormant": 1797,
+        "At-Risk High-Value": 1449,
+        "Champions": 1167,
+        "Recent Customers": 754
+      },
+      "dropped_small_classes": {},
+      "best_model_by_cv_macro_f1": "Random Forest",
+      "test_macro_f1": {
+        "Majority baseline": 0.12894887995404938,
+        "Logistic Regression": 0.39431727924839544,
+        "Decision Tree": 0.3745978243510473,
+        "Random Forest": 0.3782952320911868
+      },
+      "test_accuracy": {
+        "Majority baseline": 0.3475232198142415,
+        "Logistic Regression": 0.41099071207430343,
+        "Decision Tree": 0.3955108359133127,
+        "Random Forest": 0.40789473684210525
+      }
+    },
+    "segment_future": {
+      "customers": 5167,
+      "train_size": 3875,
+      "test_size": 1292,
+      "class_counts": {
+        "Future-3 (value rank 4 of 4)": 2821,
+        "Future-2 (value rank 3 of 4)": 1055,
+        "Future-1 (value rank 2 of 4)": 878,
+        "Future-0 (value rank 1 of 4)": 413
+      },
+      "dropped_small_classes": {},
+      "best_model_by_cv_macro_f1": "Random Forest",
+      "test_macro_f1": {
+        "Majority baseline": 0.17651477215823735,
+        "Logistic Regression": 0.3474337857639275,
+        "Decision Tree": 0.32592855243329494,
+        "Random Forest": 0.3302113944915261
+      },
+      "test_accuracy": {
+        "Majority baseline": 0.5456656346749226,
+        "Logistic Regression": 0.4458204334365325,
+        "Decision Tree": 0.43962848297213625,
+        "Random Forest": 0.48839009287925694
+      }
+    }
+  },
+  "notes": [
+    "segment_future is the leakage-free headline result; segment_lifetime is optimistic because its labels are computed from transactions that include the early window.",
+    "Model selection used cross-validation on the training split only; the test split was used once.",
+    "Future labels use a fixed-length horizon for every customer, so acquisition date does not leak into them; customers acquired in the last window+horizon days are excluded."
+  ]
+}
