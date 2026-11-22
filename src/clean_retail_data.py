@@ -25,8 +25,7 @@ REQUIRED_COLUMNS = [
 ]
 # Explicit service, adjustment and non-merchandise codes excluded in Phase 1.
 NON_PRODUCT_CODES = {
-    "POST", "M", "DOT", "BANK CHARGES", "AMAZONFEE", "ADJUST",
-    "CRUK", "D", "C2", "S", "PADS", "B", "TEST001",
+    "B", "C2", "C3", "CRUK", "D", "DOT", "GIFT", "M", "m", "POST", "S",
 }
 
 
