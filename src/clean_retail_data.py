@@ -82,8 +82,17 @@ def find_reversed_orders(data: pd.DataFrame) -> pd.Index:
     """
     is_cancel = data["Invoice"].str.startswith("C", na=False)
     cols = ["Customer ID", "StockCode", "Quantity", "InvoiceDate"]
-    purchases = data.loc[~is_cancel & (data["Quantity"] > 0), cols].copy()
-    cancels = data.loc[is_cancel & (data["Quantity"] < 0), cols].copy()
+    valid_match_keys = (
+        data["Customer ID"].notna()
+        & data["StockCode"].notna()
+        & data["InvoiceDate"].notna()
+    )
+    purchases = data.loc[
+        valid_match_keys & ~is_cancel & (data["Quantity"] > 0), cols
+    ].copy()
+    cancels = data.loc[
+        valid_match_keys & is_cancel & (data["Quantity"] < 0), cols
+    ].copy()
     if purchases.empty or cancels.empty:
         return pd.Index([])
     cancels["Quantity"] = -cancels["Quantity"]
