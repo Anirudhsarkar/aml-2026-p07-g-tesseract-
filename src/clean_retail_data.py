@@ -25,7 +25,8 @@ REQUIRED_COLUMNS = [
 ]
 # Explicit service, adjustment and non-merchandise codes excluded in Phase 1.
 NON_PRODUCT_CODES = {
-    "B", "C2", "C3", "CRUK", "D", "DOT", "GIFT", "M", "POST", "S",  # matched case-insensitively
+    "POST", "M", "DOT", "BANK CHARGES", "AMAZONFEE", "ADJUST",
+    "CRUK", "D", "C2", "S", "PADS", "B", "TEST001",
 }
 
 
@@ -134,13 +135,15 @@ def clean_transactions(
         data, funnel, "cancellation_invoices", ~cancellation,
         "Baseline excludes cancellation invoices rather than netting them to original invoices.",
     )
-    if drop_reversed:
-        data = keep_rows(
-            data, funnel, "reversed_orders", ~data.index.isin(reversed_index),
-            "Optional: drop purchase lines that a later cancellation line reverses "
-            "(same customer, stock code and quantity).",
-        )
-        diagnostics["reversed_order_lines_removed"] = int(funnel[-1]["rows_removed"])
+    valid_core = (
+        data["InvoiceDate"].notna() & data["Invoice"].notna()
+        & data["StockCode"].notna() & data["Quantity"].notna()
+        & data["Price"].notna()
+    )
+    data = keep_rows(
+        data, funnel, "invalid_core_fields", valid_core,
+        "Remove rows with missing/invalid invoice, stock code, date, quantity or price.",
+    )
     data = keep_rows(
         data, funnel, "non_product_stock_codes",
         ~data["StockCode"].str.upper().isin(NON_PRODUCT_CODES),
