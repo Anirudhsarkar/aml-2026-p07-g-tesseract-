@@ -41,7 +41,7 @@ Cleaning decisions:
 - Remove transactions without Customer ID because customer-level RFM requires customer identity.
 - Exclude cancellation invoices whose Invoice value begins with `C`; these are not netted against original purchases.
 - Exclude the explicit non-product/service StockCode list in the cleaning script.
-- Remove missing descriptions and non-positive quantities or prices.
+- Remove rows with invalid core fields and non-positive quantities or prices.
 - Do not automatically cap or remove extreme positive quantity/price values; inspect them during EDA.
 
 Run from the repository root:
@@ -67,7 +67,7 @@ The script reads `data/processed/transactions_clean.csv` and writes:
 - [Missing values after cleaning](results/missing_values_cleaned.csv)
 - [Outlier summary](results/outlier_summary.csv)
 - [EDA summary](results/eda_summary.json)
-- Three local charts under `results/figures/`
+- Three charts under `results/figures/` (monthly revenue, top products and top countries).
 
 ### Initial EDA findings
 
@@ -121,4 +121,4 @@ Acknowledge AI tools and external resources used. Verify and understand all reta
 
 ## Current status
 **Phase 1 completed:** dataset loaded and cleaned, cleaning funnel and summary recorded.  
-**Phase 2 completed:** EDA tables and summary generated from the Phase 1 cleaned transactions. RFM construction, clustering, classification and final report remain pending.
+**Phase 2 completed:** monthly revenue, product, country, missing-value and outlier analyses generated from the Phase 1 cleaned transactions. RFM construction, clustering, classification and final report remain pending.
