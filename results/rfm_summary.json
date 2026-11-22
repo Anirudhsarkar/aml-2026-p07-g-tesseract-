@@ -1,0 +1,26 @@
+{
+  "dataset": "UCI Online Retail II",
+  "source_transaction_rows": 776672,
+  "customer_count": 5861,
+  "reference_date": "2011-12-10",
+  "latest_transaction_timestamp": "2011-12-09T12:50:00",
+  "definitions": {
+    "Recency": "Days between the fixed reference date and the customer's most recent purchase date; lower is more recent.",
+    "Frequency": "Number of distinct invoice IDs per customer, not number of transaction lines.",
+    "Monetary": "Sum of Quantity multiplied by unit Price across retained transactions, in GBP."
+  },
+  "raw_feature_statistics": {
+    "Recency": {"mean":201.35181709605868,"median":96.0,"std":209.09104380511687,"min":1.0,"q1":26.0,"q3":380.0,"max":739.0,"skewness":0.89211901551184},
+    "Frequency": {"mean":6.256440880395837,"median":3.0,"std":12.796340996302261,"min":1.0,"q1":1.0,"q3":7.0,"max":377.0,"skewness":12.121414426317656},
+    "Monetary": {"mean":2913.0742719672407,"median":854.99,"std":14300.629427997734,"min":2.95,"q1":338.13,"q3":2237.12,"max":580987.04,"skewness":25.342262754572555}
+  },
+  "transform": "Apply log1p independently to Recency, Frequency and Monetary, then StandardScaler; Customer ID is excluded from model features.",
+  "log_feature_skewness": {"Recency":-0.447422964913018,"Frequency":1.0025839671951362,"Monetary":0.26589637791216897},
+  "outputs": ["customer_rfm.csv","rfm_scaled.csv","rfm_feature_statistics.csv","rfm_log_feature_statistics.csv","rfm_summary.json","results/figures/rfm_*_raw.png","results/figures/rfm_*_log.png"],
+  "limitations": [
+    "Monetary is gross retained sales because cancellation invoices were excluded in Phase 1 rather than netted.",
+    "Frequency counts distinct invoice IDs; it does not count product lines.",
+    "The reference date is fixed from the dataset maximum date plus one calendar day, not the current date.",
+    "RFM values are descriptive customer features, not labels or proof of customer lifetime value."
+  ]
+}
