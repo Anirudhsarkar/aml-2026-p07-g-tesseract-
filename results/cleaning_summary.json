@@ -1,0 +1,64 @@
+{
+  "dataset": "UCI Online Retail II",
+  "source_file": "online_retail_II.xlsx",
+  "sheets": {
+    "Year 2009-2010": {
+      "rows": 525461,
+      "columns": 8
+    },
+    "Year 2010-2011": {
+      "rows": 541910,
+      "columns": 8
+    }
+  },
+  "combined_rows": 1067371,
+  "combined_columns": [
+    "Invoice",
+    "StockCode",
+    "Description",
+    "Quantity",
+    "InvoiceDate",
+    "Price",
+    "Customer ID",
+    "Country"
+  ],
+  "missing_values_before_cleaning": {
+    "Invoice": 0,
+    "StockCode": 0,
+    "Description": 4382,
+    "Quantity": 0,
+    "InvoiceDate": 0,
+    "Price": 0,
+    "Customer ID": 243007,
+    "Country": 0
+  },
+  "exact_duplicate_rows": 34335,
+  "cancellation_invoice_rows_before_cleaning": 19494,
+  "cleaning_rules": [
+    "Remove exact duplicate transaction rows.",
+    "Remove rows without Customer ID because customer-level RFM requires customer identity.",
+    "Remove cancellation invoices whose Invoice value starts with C.",
+    "Remove non-product/service stock codes: B, C2, C3, CRUK, D, DOT, GIFT, M, m, POST, S.",
+    "Remove rows with missing Description.",
+    "Remove rows with Quantity <= 0.",
+    "Remove rows with Price <= 0."
+  ],
+  "cleaned_rows": 776672,
+  "cleaned_columns": [
+    "Invoice",
+    "StockCode",
+    "Description",
+    "Quantity",
+    "InvoiceDate",
+    "Price",
+    "Customer ID",
+    "Country"
+  ],
+  "cleaning_retention_percent": 72.765,
+  "notes": [
+    "Cleaning funnel stages are sequential; rows_removed at each stage are incremental.",
+    "No upper-tail quantity or price outlier capping/removal was applied. Extreme positive values should be inspected during EDA rather than silently discarded.",
+    "Cancellation invoices are excluded, not netted against original purchases. The team should state this choice in the report and revisit it if a return-adjusted RFM definition is required.",
+    "Non-product/service codes were excluded by an explicit list; alphabetic suffixes on ordinary stock codes were retained because many are valid product identifiers."
+  ]
+}
