@@ -22,19 +22,38 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-## First data-processing run
-After placing the workbook at the path above:
+## Phase 1 — Dataset loading and cleaning
+
+The workbook was inspected and the cleaning pipeline was run on both sheets.
+
+| Source sheet | Rows | Columns |
+|---|---:|---:|
+| Year 2009–2010 | 525,461 | 8 |
+| Year 2010–2011 | 541,910 | 8 |
+| **Combined** | **1,067,371** | **8** |
+
+The current baseline retains **776,672 transactions (72.765%)** after sequential cleaning. The exact stage-by-stage counts and rules are recorded in [results/cleaning_funnel.csv](results/cleaning_funnel.csv) and [results/cleaning_summary.json](results/cleaning_summary.json).
+
+Cleaning decisions:
+- Remove exact duplicate rows.
+- Remove transactions without Customer ID because customer-level RFM requires customer identity.
+- Exclude cancellation invoices whose Invoice value begins with `C`; these are not netted against original purchases.
+- Exclude the explicit non-product/service StockCode list in the cleaning script.
+- Remove missing descriptions and non-positive quantities or prices.
+- Do not automatically cap or remove extreme positive quantity/price values; inspect them during EDA.
+
+Run the pipeline from the repository root:
 
 ```bash
 python src/clean_retail_data.py
 ```
 
-Expected outputs:
+Expected local outputs:
 - `data/processed/transactions_clean.csv`
 - `results/cleaning_funnel.csv`
 - `results/cleaning_summary.json`
 
-Review the cleaning funnel and decisions before using the output. The rules are a baseline, not unquestionable scientific choices. The script has not yet been validated on the actual workbook.
+The processed transaction CSV is approximately 68.8 MB and remains excluded from Git to keep the repository lightweight. Generate it locally using the command above. The original workbook must also remain outside Git.
 
 ## Planned analysis
 1. **EDA:** cleaning funnel, monthly revenue, top products and country analysis.
@@ -61,7 +80,7 @@ Review the cleaning funnel and decisions before using the output. The rules are 
 Agree and record actual responsibilities here. Every member should understand the code and decisions they contribute.
 
 ## Headline results
-**Pending.** Add a metric, value and evaluation split only after experiments are run. Do not invent results.
+**Clustering and classification metrics pending.** The Phase 1 cleaning retention is a data-preparation statistic, not a model-performance metric.
 
 ## AI and external resources
 Acknowledge AI tools and external resources used. Verify and understand all retained code; the individual assessment tests understanding.
@@ -72,4 +91,4 @@ Acknowledge AI tools and external resources used. Verify and understand all reta
 - Final: analysis, evaluation, report, README and `REPRODUCIBILITY.md`.
 
 ## Current status
-Repository scaffold only. No dataset results, model metrics, or completed analysis are claimed yet.
+**Phase 1 completed:** both workbook sheets loaded, cleaning rules applied, cleaning funnel and summary recorded. EDA, RFM construction, clustering, classification and final report remain pending.
