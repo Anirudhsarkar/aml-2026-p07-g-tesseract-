@@ -1,0 +1,9 @@
+stage,rows_remaining,rows_removed
+Loaded from both sheets,1067371,0.0
+After exact duplicate removal,1033036,34335.0
+After removing missing Customer ID,797885,235151.0
+After removing cancellation invoices,779495,18390.0
+After removing non-product/service stock codes,776735,2760.0
+After removing missing descriptions,776735,0.0
+After removing non-positive quantities,776735,0.0
+After removing non-positive prices,776672,63.0
